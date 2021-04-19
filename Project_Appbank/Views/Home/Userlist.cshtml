@@ -1,0 +1,100 @@
+﻿@using Project_Appbank.ViewModels;
+@model List<UserViewModel>
+@{ 
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+<br><br>
+<h1>รายการผู้ใช้</h1>
+<table>
+    <tbody>
+        <tr>
+            <th>ชื่อ</th>
+            <th>อีเมล์</th>
+            <th>สถานะ</th>
+            <th>เครื่องมือ</th>
+        </tr>
+
+        @foreach (var value in Model)
+        {
+    <tr>
+        <td>@value.UserName</td>
+        <td>@value.UserEmail</td>
+        @if (value.UserIsActive == 1)
+        {
+
+
+            <td>ใช้งาน</td>
+        }
+        else
+        {
+            <td>ไม่ใช้งาน</td>
+        }
+    <td>
+        <button  onclick="login(@value.UserId)">บัญชี</button>
+    </td>
+    </tr>
+        
+        }
+
+    </tbody>
+
+</table>
+
+<script>
+
+    function deposit() {
+        var obj = { type: 1 };
+        axios({
+            method: "post",
+            url: "/Transaction/Deposit",
+            data: obj,
+        })
+            .then(function (response) {
+                console.log(response)
+            })
+    }
+
+    function login(id) {
+        var id = parseInt(id)
+        var obj = { UserId: id };
+            
+        axios({
+            method: "post",
+            url: "/Home/login",
+            data: obj,
+        })
+            .then(function (response) {
+                document.location = '/Home/Index';
+            })
+    }
+</script>
+
+
+
+<style>
+    .btn_serach {
+        margin-right: 20px;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    table {
+        margin-top: 15px;
+        width: 100%;
+        text-align: center;
+    }
+
+    th {
+        height: 100px;
+    }
+
+    td {
+        height: 50px;
+    }
+
+    .btn {
+        float: right;
+    }
+</style>

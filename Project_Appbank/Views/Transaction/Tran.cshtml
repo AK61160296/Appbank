@@ -1,0 +1,484 @@
+﻿@model List<Project_Appbank.ViewModels.TransactionViewModels>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h2>รายการธุรกรรม</h2>
+
+<div class="btn">
+    <label for="birthday">วันเริ่มต้น:</label>
+    <input type="date" id="begin_date" name="birthday">
+    <label for="birthday">วันที่สิ้นสุด:</label>
+    <input type="date" id="end_date" name="birthday">
+    <label style=" margin-right: 10px;" for="fname">
+        คำค้นหา :
+    </label>
+    <input type="text" id="keyword" name="" placeholder="เลขบัญชี รายละเอียด">
+    <button class="btn_serach" onclick="search()">ค้นหา</button>
+    <button data-toggle="modal" onclick="clear_model()" data-target="#Transfer">โอนเงิน</button>
+    <button data-toggle="modal" onclick="clear_model()" data-target="#Deposit_Withdraw">ฝาก-ถอน</button>
+</div>
+@*<table>
+        <tbody>
+            <tr>
+                <th>วันที่</th>
+                <th>เลขบัญชี</th>
+                <th>รายละเอียด</th>
+                <th>หักบัญชี</th>
+                <th>เข้าบัญชี</th>
+                <th>ยอดคงเหลือ</th>
+
+            </tr>
+            @foreach (var value in Model)
+            {
+                <tr>
+
+                    <td>@value.TsDate.ToString("MM/dd/yyyy")</td>
+                    <td>@value.name</td>
+                    <td>@value.TsDetail</td>
+                    @if (value.TsAcDestinationId == 0 && value.TsType == 2)
+                    {
+                        <td style="color:red">@value.TsMoney</td>
+                        <td> - </td>
+                    }
+                    else if (value.TsAcDestinationId == 0 && value.TsType == 1)
+                    {
+                        <td>-</td>
+                        <td style="color:lawngreen">@value.TsMoney</td>
+                    }
+                    else
+                    {
+                        <td style="color:red">@value.TsMoney</td>
+                        <td> - </td>
+                    }
+                    <td>@value.TsBalance</td>
+                </tr>
+
+            }
+
+        </tbody>
+
+    </table>*@
+<div class="text-center" id="tbl"></div>
+<br>
+<p align="center" id="no_data">ไม่มีข้อมูล</p>
+<div class="modal fade" id="Deposit_Withdraw" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">ฝาก-ถอน</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="model1">
+                    <div class="form-group">
+                        <label for="exampleFormControlSelect1">บัญชี <span style="color:red;">*</span></label>
+                        <select class="form-control" id="ts_ac">
+                            <option value="0" disabled selected>- กรุณาเลือกบัญชีที่จะทำรายการ -</option>
+                        </select>
+                        <span style="color:red;">
+                            <span id="ts_ac_check"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleFormControlSelect1">ประเภทรายการ <span style="color:red;">*</span></label>
+                        <select class="form-control" id="ts_type">
+                            <option value="0" disabled selected>- กรุณาเลือกประเภทการทำรายการ -</option>
+                            <option value="1">ฝาก</option>
+                            <option value="2">ถอน</option>
+                        </select>
+                        <span style="color:red;">
+                            <span id="ts_type1"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">จำนวนเงิน <span style="color:red;">*</span></label>
+                        <input type="number" class="form-control" maxlength="10" id="ts_monney_dw" min="0">
+                        <span style="color:red;">
+                            <span id="ts_monney_dw1"></span>
+                        </span>
+                    </div>
+
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                <button type="submit" onclick="Deposit_Withdraw()" class="btn btn-primary">บันทึก</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="Transfer" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">โอนเงิน</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="model2">
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">จาก <span style="color:red;">*</span></label>
+                        <select class="form-control" id="ts_ac1" onchange="balance()">
+                            <option value="0" disabled selected>- กรุณาเลือกบัญชีที่จะทำรายการ -</option>
+                        </select>
+
+                        <p id="mon"></p>
+                        <span style="color:red;">
+                            <span id="ts_ac1_check"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">ไปที่ <span style="color:red;">*กรุณากรอกเลขบัญชีให้ครบ 10 หลัก</span></label>
+                        <input type="text" class="form-control" maxlength="10" id="ts_ac2">
+                        <span style="color:red;">
+                            <span id="ts_ac2_check"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">จำนวนเงิน <span style="color:red;">*</span></label>
+                        <input type="number" class="form-control" maxlength="10" id="ts_monney" min="0">
+                        <span style="color:red;">
+                            <span id="ts_monney_check"></span>
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">หมายเหตุ </label>
+                        <br>
+                        <textarea rows="4" cols="63" name="comment" id="note" form="usrform"></textarea>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                <button type="submit" onclick="transfer()" class="btn btn-primary">บันทึก</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        option_account()
+        search()
+        $('#Transfer').on('hidden.bs.modal', function (e) {
+            document.getElementById("mon").style.display = "none"
+        })
+     
+        //$('#datepicker').datepicker({
+        //    format: 'dd/mm/yyyy',
+        //    todayBtn: true,
+        //    language: 'th',
+        //    thaiyear: true,
+        //    autoclose: true
+        //}).datepicker("setDate", "0");
+    });
+
+    function balance() {
+        document.getElementById("mon").style.display = "block"
+        var ac_id = document.getElementById("ts_ac1").value;
+
+        var id = parseInt(ac_id)
+        var obj = { TsAcId: id }
+        axios({
+            method: "post",
+            url: "/Transaction/Balance",
+            data: obj,
+        })
+            .then(function (response) {
+                document.getElementById("mon").innerHTML = "ยอดเงินที่โอนได้ : " + response.data + " บาท"
+            })
+    }
+
+    function search() {
+
+        var keyword = document.getElementById("keyword").value
+        var begin_date = document.getElementById("begin_date").value
+        var end_date = document.getElementById("end_date").value
+        var obj = { keyword: keyword, date_begin: begin_date, date_end: end_date, TsDetail: keyword };
+
+        document.getElementById("begin_date").value = "";
+        document.getElementById("end_date").value = "";
+        document.getElementById("keyword").value = "";
+
+        if (keyword == " ") {
+            keyword = "0";
+        }
+
+        axios({
+            method: "post",
+            url: "/Transaction/Search",
+            data: obj,
+        })
+            .then(function (response) {
+                console.log(response)
+                var div = document.createElement('div');
+                div.setAttribute("id", "tbl");
+                document.body.appendChild(div)
+                if (response.data.length != 0) {
+                    document.getElementById("no_data").style.display = "none";
+                    var x = "<table border = '1' width: 100%;>"
+                    x += '<tr>'
+                    x += '<th>วันที่</th>'
+                    x += '<th>ชื่เลขบัญชี</th> '
+                    x += '<th>รายละเอียด</th>'
+                    x += '<th>หักบัญชี</th>'
+                    x += '<th>เข้าบัญชี</th>'
+                    x += '<th>ยอดคงเหลือ</th>'
+                    x += '</tr>'
+                    response.data.forEach(function (entry) {
+                        x += '<tr>'
+                        x += '<td>' + entry.date1 + '</td>'
+                        x += '<td>' + entry.name + '</td>'
+                        x += '<td>' + entry.tsDetail + '</td>'
+                        if (entry.tsType == 1 && entry.tsAcDestinationId == 0) {
+                            x += '<td>-</td>'
+                            x += '<td style="color:lawngreen">' + entry.tsMoney + '</td>'
+                        } else if (entry.tsType == 2 && entry.tsAcDestinationId == 0) {
+                            x += '<td style="color:red">' + entry.tsMoney + '</td>'
+                            x += '<td>-</td>'
+                        } else if (entry.tsType == 2 && entry.tsAcDestinationId != 0) {
+                            x += '<td>-</td>'
+                            x += '<td style="color:lawngreen">' + entry.tsMoney + '</td>'
+                        } else {
+                            x += '<td style="color:red">' + entry.tsMoney + '</td>'
+                            x += '<td>-</td>'
+                        }
+                        x += '<td>' + entry.tsBalance + ' <span style="font-size:11px">THB</span></td>'
+                        x += '</tr>'
+                    });
+                    document.getElementById("tbl").innerHTML = x;
+                } else {
+                    var x = "<table border = '1' width: 100%;>"
+                    x += '<tr>'
+                    x += '<th>วันที่</th>'
+                    x += '<th>ชื่เลขบัญชี</th> '
+                    x += '<th>รายละเอียด</th>'
+                    x += '<th>หักบัญชี</th>'
+                    x += '<th>เข้าบัญชี</th>'
+                    x += '<th>ยอดคงเหลือ</th>'
+                    x += '</tr>'
+                    document.getElementById("tbl").innerHTML = x;
+                }
+            })
+    }
+
+    function clear_model() {
+        document.getElementById('model1').reset()
+        document.getElementById('model2').reset()
+    }
+
+    function option_account() {
+        axios({
+            method: "post",
+            url: "/Transaction/Option_account",
+        })
+            .then(function (response) {
+                console.log(response);
+                var select1 = document.getElementById("ts_ac1"); //tran
+                var select2 = document.getElementById("ts_ac"); //dw
+             
+
+                for (var i = 0; i < response.data.length; i++) {
+                    select1.options[select1.options.length] = new Option(response.data[i].acNumber, response.data[i].acId);
+                    select2.options[select2.options.length] = new Option(response.data[i].acNumber, response.data[i].acId);
+                }
+            })
+    }
+
+    function transfer() {
+    
+        var ts_ac1 = document.getElementById("ts_ac1").value
+        var ts_ac1_id = document.getElementById("ts_ac1");
+        var text = ts_ac1_id.options[ts_ac1_id.selectedIndex].text;
+        var ts_ac2 = document.getElementById("ts_ac2").value
+
+        if ($('#ts_ac1').val() == null) {
+            $('#ts_ac1').css("border", "1px solid red");
+            $('#ts_ac1').focus();
+            $('#ts_ac1_check').text('กรุณาเลือกบัญชีที่จะทำรายการ')
+        } else {
+            $('#ts_ac1').css("border", "");
+            $('#ts_ac1_check').text('')
+        }
+
+        if ($('#ts_ac2').val().trim() == '') {
+            $('#ts_ac2').css("border", "1px solid red");
+            $('#ts_ac2').focus();
+            $('#ts_ac2_check').text('กรุณากรอกเลขบัญชี')
+        } else if (text == ts_ac2) {
+            $('#ts_ac2').css("border", "1px solid red");
+            $('#ts_ac2').focus();
+            $('#ts_ac2_check').text('กรุณากรอกบัญชีที่ไม่ซ้ำกับบัญชีที่ทำรายการ')
+        } else if (ts_ac2.length < 10) {
+            $('#ts_ac2').css("border", "1px solid red");
+            $('#ts_ac2').focus();
+            $('#ts_ac2_check').text('กรุณากรอกบัญชีให้ครบ 10 หลัก')
+        } else {
+            $('#ts_ac2').css("border", "");
+            $('#ts_ac2_check').text('')
+        }
+
+        if ($('#ts_monney').val().trim() == '') {
+            $('#ts_monney').css("border", "1px solid red");
+            $('#ts_monney').focus();
+            $('#ts_monney_check').text('กรุณากรอกจำนวนเงิน')
+        } else {
+            $('#ts_monney').css("border", "");
+            $('#ts_monney_check').text('')
+        }
+
+        var ts_monney = document.getElementById("ts_monney").value
+        var note = document.getElementById("note").value
+        var detail = "โอนเงิน"
+        var Type = 3;
+        var AcId = parseInt(ts_ac1)
+        var monney = parseInt(ts_monney)
+        var obj = { TsAcId: AcId, TsType: Type, TsMoney: monney, TsDetail: detail, TsNote: note, TsAD: ts_ac2 }
+
+        if (ts_monney.trim() != '' && ts_ac1.trim() != '' && ts_ac2.trim() != '' && ts_ac2.length >= 10 && ts_ac2 != text) {
+            $('#Transfer').modal('hide');
+            axios({
+                method: "post",
+                url: "/Transaction/Transfer",
+                data: obj,
+
+            })
+                .then(function (response) {
+                    console.log(response)
+                    if (response.data == 1) {
+                        swal({
+                            title: "บันทึกข้อมูลสำเร็จ",
+                            text: "You clicked the button!",
+                            icon: "success",
+                        }).then((value) => {
+                            search()
+                        });
+                    } else {
+                        swal({
+                            title: "บันทึกข้อมูลสำเร็จ",
+                            text: "เนื่องจำนวนเงินไม่เพียงพอต่อการโอน",
+                            icon: "error",
+                        });
+                    }
+            
+                })
+        }
+    }
+
+    function Deposit_Withdraw() {
+ 
+        var type = $('#ts_type').val();
+        if ($('#ts_monney_dw').val().trim() == '') {
+            $('#ts_monney_dw').css("border", "1px solid red");
+            $('#ts_monney_dw').focus();
+            $('#ts_monney_dw1').text('กรุณากรอกจำนวนเงิน')
+        } else {
+            $('#ts_monney_dw').css("border", "");
+            $('#ts_monney_dw1').text('')
+        }
+
+        if ($('#ts_type').val() == null) {
+            $('#ts_type').css("border", "1px solid red");
+            $('#ts_type').focus();
+            $('#ts_type1').text('กรุณาเลือกประเภทการทำรายการ')
+        } else {
+            $('#ts_monney_dw').css("border", "");
+            $('#ts_type1').text('')
+        }
+
+        if ($('#ts_ac').val() == null) {
+            $('#ts_ac').css("border", "1px solid red");
+            $('#ts_ac').focus();
+            $('#ts_ac_check').text('กรุณาเลือกบัญชีที่ทำรายการ')
+        } else {
+            $('#ts_ac').css("border", "");
+            $('#ts_ac_check').text('')
+        }
+
+
+        var ts_num = document.getElementById("ts_ac").value
+        var ts_type = document.getElementById("ts_type").value
+        var ts_monney_dw = document.getElementById("ts_monney_dw").value
+
+        if (ts_type == 1) {
+            detail = "ฝากเงิน"
+        } else {
+            detail = "ถอนเงิน"
+        }
+
+        var AcId = parseInt(ts_num)
+        var Type = parseInt(ts_type)
+        var monney = parseInt(ts_monney_dw)
+        var obj = { TsAcId: AcId, TsType: Type, TsMoney: monney, TsDetail: detail }
+
+        if (ts_monney_dw.trim() != '' && ts_num.trim() != '' && ts_type.trim() != 0) {
+            $('#Deposit_Withdraw').modal('hide');
+            axios({
+                method: "post",
+                url: "/Transaction/Deposit_Withdraw",
+                data: obj,
+
+            })
+                .then(function (response) {
+                    console.log(response)
+                    if (response.data == 1) {
+                        swal({
+                            title: "บันทึกข้อมูลสำเร็จ",
+                            text: "You clicked the button!",
+                            icon: "success",
+                        }).then((value) => {
+                            search()
+                        });
+
+                    } else {
+                        swal({
+                            title: "บันทึกข้อมูลไม่สำเร็จ",
+                            text: "เนื่องจำนวนเงินไม่เพียงพอต่อการถอน",
+                            icon: "error",
+                        });
+                    }
+           
+                })
+        }
+    }
+
+</script>
+
+<style>
+    .btn_serach {
+        margin-right: 20px;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    table {
+        margin-top: 15px;
+        width: 100%;
+        text-align: center;
+    }
+
+    th {
+        height: 100px;
+    }
+
+    td {
+        height: 50px;
+    }
+
+    .btn {
+        float: right;
+    }
+</style>

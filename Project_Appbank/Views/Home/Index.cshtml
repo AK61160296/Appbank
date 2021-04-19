@@ -1,0 +1,385 @@
+﻿@model List<Project_Appbank.ViewModels.AccountViewModels>
+@{
+    ViewData["Title"] = "Home Page";
+}
+<h2>รายการบัญชี</h2>
+
+<div class="btn">
+    <label style=" margin-right: 10px;" for="fname">
+        ค้นหา :
+    </label>
+    <input type="text" id="keyword" name="" placeholder="เลขบัญชี ชื่อย่อ">
+    <button class="btn_serach" onclick="search()">ค้นหา</button>
+    <button data-toggle="modal" onclick="clear_model()" data-target="#exampleModal">เพิ่มบัญชี</button>
+</div>
+
+<div class="text-center" id="tbl"></div>
+<br>
+<p align="center" id="no_data">ไม่มีข้อมูล</p>
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">เพิ่มบัญชี</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="form_insert">
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">เลขบัญชี : <span style="color:red;">*กรุณากรอกเลขบัญชีให้ครบ 10 หลัก</span></label>
+                        <input type="text" class="form-control" maxlength="10" id="ac_number">
+                        <span style="color:red;">
+                            <span id="validate_number"></span>
+                        </span>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">ชื่อย่อบัญชี :</label>
+                        <input type="text" class="form-control" maxlength="30" id="ac_name">
+                        <span style="color:red;">
+                            <span id="validate_name"></span>
+                        </span>
+
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" name="progress" type="checkbox" onClick="ckChange(this)" value="1" id="check1">
+                        <label class="form-check-label" for="defaultCheck1">
+                            ใช้งาน
+                        </label>
+                        &nbsp;
+                        &nbsp;
+                        &nbsp;
+                        <input class="form-check-input" name="progress" type="checkbox" onClick="ckChange(this)" value="0" id="check2">
+                        <label class="form-check-label" for="defaultCheck2">
+                            ไม่ใช้งาน
+                        </label>
+                    </div>
+                    <span style="color:red;">
+                        <span id="validate_is_active"></span>
+                    </span>
+
+
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                <button type="submit" onclick="insert_account()" class="btn btn-primary">บันทึก</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">เเก้ไขบัญชี</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form_edit">
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">เลขบัญชี:</label>
+                        <input type="text" class="form-control" id="ac_number_edit" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="recipient-name" class="col-form-label">ชื่อย่อบัญชี:</label>
+                        <input type="text" class="form-control" id="ac_name_edit">
+                        <input type="text" class="form-control" maxlength="30" id="ac_id_edit" hidden>
+                    </div>
+                    <span style="color:red;">
+                        <span id="validate_name_edit"></span>
+                    </span>
+                    <div class="form-check">
+                        <input class="messageCheckbox" name="progress" type="checkbox" onClick="ckChange(this)" value="1" id="check_edit1">
+                        <label class="form-check-label" for="defaultCheck1">
+                            ใช้งาน
+                        </label>
+                        &nbsp;
+                        &nbsp;
+                        &nbsp;
+                        <input class="messageCheckbox" name="progress" type="checkbox" onClick="ckChange(this)" value="0" id="check_edit2">
+                        <label class="form-check-label" for="defaultCheck2">
+                            ไม่ใช้งาน
+                        </label>
+                    </div>
+                    <span style="color:red;">
+                        <span id="validate_is_active_edit"></span>
+                    </span>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+                <button type="submit" onclick="update_account()" class="btn btn-primary">บันทึก</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    $(document).ready(function () {
+        search()
+    });
+
+    function search() {
+
+        var keyword = document.getElementById("keyword").value
+        var obj = { acNumber: keyword, acName: keyword };
+
+        axios({
+            method: "post",
+            url: "/Home/Search",
+            data: obj,
+        })
+            .then(function (response) {
+                console.log(response)
+                var div = document.createElement('div');
+                div.setAttribute("id", "tbl");
+                document.body.appendChild(div)
+                if (response.data.length != 0) {
+                    document.getElementById("no_data").style.display = "none";
+                    var x = "<table border = '1' width: 100%;>"
+                    x += '<tr>'
+                    x += '<th>เลขบัญชี</th>'
+                    x += '<th>ชื่อย่อบัญชี</th> '
+                    x += '<th>ยอดคงเหลือ</th>'
+                    x += '<th>สถานะ</th>'
+                    x += '<th>เครื่องมือ</th>'
+                    x += '</tr>'
+                    response.data.forEach(function (entry) {
+                        x += '<tr>'
+                        x += '<td>' + entry.acNumber + '</td>'
+                        x += '<td>' + entry.acName + '</td>'
+                        x += '<td>' + entry.acBalance + ' <span style="font-size:11px">THB</span></td>'
+                        x += '<td>' + entry.acIsActive + '</td>'
+                        x += '<td>' + '<button data-toggle="modal" onclick="edit_account(' + entry.acId + ')" data-target="#edit">เเก้ไข</button>' + '</td>'
+                        x += '</tr>'
+                    });
+
+                    document.getElementById("tbl").innerHTML = x;
+                } else {
+                    var x = "<table border = '1' width: 100%;>"
+                    x += '<tr>'
+                    x += '<th>เลขบัญชี</th>'
+                    x += '<th>ชื่อย่อบัญชี</th> '
+                    x += '<th>ยอดคงเหลือ</th>'
+                    x += '<th>สถานะ</th>'
+                    x += '<th>เครื่องมือ</th>'
+                    x += '</tr>'
+                    document.getElementById("tbl").innerHTML = x;
+                }
+            })
+    }
+
+    function ckChange(el) {
+        var ckName = document.getElementsByName(el.name);
+        if (el.checked) {
+            for (var i = 0; i < ckName.length; i++) {
+                ckName[i].disabled = ckName[i] !== el;
+            }
+        } else {
+            for (var i = 0; i < ckName.length; i++) {
+                ckName[i].disabled = false
+            }
+        }
+    }
+
+    function clear_model() {
+        document.getElementById('form_insert').reset()
+        document.getElementById('form_edit').reset()
+    }
+
+    function insert_account() {
+     
+        if ($('#ac_number').val().trim() == '') {
+            $('#ac_number').css("border", "1px solid red");
+            $('#ac_number').focus();
+            $('#validate_number').text('กรุณากรอกเลขบัญชี')
+        } else {
+            $('#ac_number').css("border", "");
+            $('#validate_number').text('')
+        }
+
+        var ac = document.getElementById('ac_number').value;
+        if (ac.length < 10 && ac.trim() != '') {
+            alert("กรุณากรอกเลขบัญชีให้ครบ 10 หลัก")
+            document.getElementById('ac_number').style.boder = "1px solid red";
+        }
+
+        if ($('#ac_name').val().trim() == '') {
+            $('#ac_name').css("border", "1px solid red");
+            $('#validate_name').text('กรุณากรอกชื่อย่อบัญชี')
+        } else {
+            $('#ac_name').css("border", "");
+            $('#validate_name').text('')
+        }
+
+        var is_active;
+        var checkBox1 = document.getElementById("check1");
+        var checkBox2 = document.getElementById("check2");
+        if (checkBox1.checked != true && checkBox2.checked != true) {
+            $('#validate_is_active').text('กรุณาเลือกสถานะ')
+        } else {
+            if (checkBox1.checked == true) {
+                is_active = 1
+                $('#validate_is_active').text('')
+            }
+            if (checkBox2.checked == true) {
+                is_active = 0
+                $('#validate_is_active').text('')
+            }
+        }
+
+        var ac_number = document.getElementById("ac_number").value
+        var ac_name = document.getElementById("ac_name").value
+
+        var obj = { acNumber: ac_number, acName: ac_name, acIsActive: is_active };
+
+        if (ac_number.length >= 10 && ac_name.trim() != '') {
+            $('#exampleModal').modal('hide');
+            axios({
+                method: "post",
+                url: "/Home/Add",
+                data: obj,
+            })
+                .then(function (response) {
+                    if (response.data == 1) {
+                        swal({
+                            title: "บันทึกข้อมูลสำเร็จ",
+                            text: "You clicked the button!",
+                            icon: "success",
+                    
+                        }).then((value) => {
+                            search()
+                        });
+                 
+                    } else {
+                        swal({
+                            title: "บันทึกข้อมูลไม่สำเร็จ",
+                            text: "เนื่องจากเลขบัญชีซ้ำ",
+                            icon: "error",
+                        })
+                    }
+
+                })
+
+        }
+    }
+
+    function modal_close() {
+        $('#edit').modal('hide');
+    }
+
+
+    function edit_account(id) {
+        clear_model()
+
+        var obj = { AcId: id };
+        axios({
+            method: "post",
+            url: "/Home/Edit",
+            data: obj,
+        })
+            .then(function (response) {
+                console.log(response.data.acName)
+                document.getElementById("ac_number_edit").value = response.data.acNumber
+                document.getElementById("ac_name_edit").value = response.data.acName
+                document.getElementById("ac_id_edit").value = response.data.acId
+
+                if (response.data.acIsActive == 1) {
+                    document.getElementById("check_edit1").checked = true;
+                    document.getElementById("check_edit2").disabled = true;
+                } else {
+                    document.getElementById("check_edit2").checked = true;
+                    document.getElementById("check_edit1").disabled = true;
+                }
+            })
+    }
+
+    function update_account() {
+  
+        if ($('#ac_name_edit').val().trim() == '') {
+            $('#ac_name_edit').css("border", "1px solid red");
+            $('#ac_name_edit').focus();
+            $('#validate_name_edit').text('กรุณากรอกชื่อย่อบัญชี')
+        } else {
+            $('#ac_name_edit').css("border", "");
+            $('#validate_name_edit').text('')
+        }
+        var checkBox1 = document.getElementById("check_edit1");
+        var checkBox2 = document.getElementById("check_edit2");
+        if (checkBox1.checked != true && checkBox2.checked != true) {
+            $('#validate_is_active').text('กรุณาเลือกสถานะ')
+        } else {
+            if (checkBox1.checked == true) {
+                is_active = 1
+                $('#validate_is_active_edit').text('')
+            }
+            if (checkBox2.checked == true) {
+                is_active = 0
+                $('#validate_is_active_edit').text('')
+            }
+        }
+        var ac_number_edit = document.getElementById("ac_number_edit").value
+        var ac_name_edit = document.getElementById("ac_name_edit").value
+        var ac_id_edit = document.getElementById("ac_id_edit").value;
+
+        var ac_id = parseInt(ac_id_edit)
+        var obj = { acId: ac_id, acNumber: ac_number_edit, acName: ac_name_edit, acIsActive: is_active };
+        $('#edit').modal('hide');
+        axios({
+            method: "post",
+            url: "/Home/Update",
+            data: obj,
+        })
+            .then(function (response) {
+                swal({
+                    title: "เเก้ไขข้อมูลสำเร็จ",
+                    text: "You clicked the button!",
+                    icon: "success", 
+                })
+                    .then((value) => {
+                        search()
+                });
+               
+
+                console.log(response);
+            })
+    }
+
+</script>
+<style>
+    .btn_serach {
+        margin-right: 20px;
+    }
+
+    table, th, td {
+        border: 1px solid black;
+    }
+
+    table {
+        margin-top: 15px;
+        width: 100%;
+        text-align: center;
+    }
+
+    th {
+        height: 100px;
+    }
+
+    td {
+        height: 50px;
+    }
+
+    .btn {
+        float: right;
+    }
+</style>
