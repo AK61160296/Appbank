@@ -196,6 +196,7 @@
             data: obj,
         })
             .then(function (response) {
+                console.log(response)
                 document.getElementById("mon").innerHTML = "ยอดเงินที่โอนได้ : " + response.data + " บาท"
             })
     }
@@ -364,9 +365,15 @@
                         }).then((value) => {
                             search()
                         });
+                   } else if (response.data == 2) {
+                        swal({
+                            title: "บันทึกข้อมูลไม่สำเร็จ",
+                            text: "เนื่องข้อมูลเกิดข้อผิดพลาด",
+                            icon: "error",
+                        });
                     } else {
                         swal({
-                            title: "บันทึกข้อมูลสำเร็จ",
+                            title: "บันทึกข้อมูลไม่สำเร็จ",
                             text: "เนื่องจำนวนเงินไม่เพียงพอต่อการโอน",
                             icon: "error",
                         });
@@ -441,6 +448,12 @@
                             search()
                         });
 
+                    } else if (response.data == 2) {
+                        swal({
+                            title: "บันทึกข้อมูลไม่สำเร็จ",
+                            text: "เนื่องข้อมูลเกิดข้อผิดพลาด",
+                            icon: "error",
+                        });
                     } else {
                         swal({
                             title: "บันทึกข้อมูลไม่สำเร็จ",

@@ -87,9 +87,9 @@ namespace Project_Appbank.Controllers
 
             var balance = from a in _context.Account
                           where a.AcId == model.TsAcId
-                          select a.AcBalance;
+                          select a;
 
-            return Json(balance.First());
+            return Json(balance.FirstOrDefault());
         }
 
         public IActionResult Option_account()
@@ -117,14 +117,14 @@ namespace Project_Appbank.Controllers
                 {
                     var check_balace = (from a in _context.Account
                                         where a.AcId == model.TsAcId
-                                        select a.AcBalance).First();
+                                        select a.AcBalance).FirstOrDefault();
 
                     if (check_balace >= model.TsMoney)
                     {
 
                         var account_transfer_id = (from a in _context.Account
                                                    where a.AcNumber == model.TsAD
-                                                   select a.AcId).First();
+                                                   select a.AcId).FirstOrDefault();
 
                         var account_data = (from c in _context.Account
                                             where c.AcId == account_transfer_id
@@ -132,9 +132,6 @@ namespace Project_Appbank.Controllers
                         account_data.AcBalance += model.TsMoney;
                         _context.SaveChanges();
 
-                        int zero = 0;
-                        var aa = 1 / zero;
-                        
                         var account_data1 = (from c in _context.Account
                                              where c.AcId == model.TsAcId
                                              select c).Single();
@@ -159,7 +156,7 @@ namespace Project_Appbank.Controllers
 
                         var now_balance = (from a in _context.Account
                                            where a.AcId == account_transfer_id
-                                           select a.AcBalance).First();
+                                           select a.AcBalance).FirstOrDefault();
 
                         var transfer_data_target = new Transaction()
                         {
@@ -182,7 +179,7 @@ namespace Project_Appbank.Controllers
                 catch (Exception ex)
                 {
                     t.Rollback();
-                    check_swal = 0;
+                    check_swal = 2;
                 }
             }
 
@@ -193,63 +190,78 @@ namespace Project_Appbank.Controllers
 
             int check_swal = 0;
 
-            var check_balance = (from a in _context.Account
-                                 where a.AcId == model.TsAcId
-                                 select a.AcBalance).First();
-
-
-            if (model.TsType == 2 && check_balance >= model.TsMoney)
+            using (var tran = _context.Database.BeginTransaction())
             {
-                var update_balance = (from c in _context.Account
-                                      where c.AcId == model.TsAcId
-                                      select c).Single();
-
-                update_balance.AcBalance -= model.TsMoney;
-                _context.SaveChanges();
-
-                var now_balance = (from a in _context.Account
-                                   where a.AcId == model.TsAcId
-                                   select a.AcBalance).First();
-
-                var transaction_Deposit = new Transaction()
+                try
                 {
-                    TsAcId = model.TsAcId,
-                    TsBalance = now_balance,
-                    TsDate = DateTime.Now,
-                    TsMoney = model.TsMoney,
-                    TsDetail = model.TsDetail,
-                    TsType = model.TsType,
-                };
-                _context.Transaction.Add(transaction_Deposit);
-                _context.SaveChanges();
-                check_swal = 1;
-            }
-            else
-            {
-                var update_balance = (from c in _context.Account
-                                      where c.AcId == model.TsAcId
-                                      select c).Single();
-                update_balance.AcBalance += model.TsMoney;
-                _context.SaveChanges();
+                    var check_balance = (from a in _context.Account
+                                         where a.AcId == model.TsAcId
+                                         select a.AcBalance).FirstOrDefault();
 
-                var now_balance = (from a in _context.Account
-                                   where a.AcId == model.TsAcId
-                                   select a.AcBalance).First();
+                    if (model.TsType == 2 && check_balance >= model.TsMoney)
+                    {
+                        var update_balance = (from c in _context.Account
+                                              where c.AcId == model.TsAcId
+                                              select c).Single();
 
-                var transaction_Withdraw = new Transaction()
+                        update_balance.AcBalance -= model.TsMoney;
+                        _context.SaveChanges();
+
+                        var now_balance = (from a in _context.Account
+                                           where a.AcId == model.TsAcId
+                                           select a.AcBalance).FirstOrDefault();
+
+                        var transaction_Deposit = new Transaction()
+                        {
+                            TsAcId = model.TsAcId,
+                            TsBalance = now_balance,
+                            TsDate = DateTime.Now,
+                            TsMoney = model.TsMoney,
+                            TsDetail = model.TsDetail,
+                            TsType = model.TsType,
+                        };
+                        _context.Transaction.Add(transaction_Deposit);
+                        _context.SaveChanges();
+                        check_swal = 1;
+                    }
+                    else
+                    {
+                        var update_balance = (from c in _context.Account
+                                              where c.AcId == model.TsAcId
+                                              select c).Single();
+                        update_balance.AcBalance += model.TsMoney;
+                        _context.SaveChanges();
+
+                        var now_balance = (from a in _context.Account
+                                           where a.AcId == model.TsAcId
+                                           select a.AcBalance).FirstOrDefault();
+
+                        var transaction_Withdraw = new Transaction()
+                        {
+                            TsAcId = model.TsAcId,
+                            TsBalance = now_balance,
+                            TsDate = DateTime.Now,
+                            TsMoney = model.TsMoney,
+                            TsDetail = model.TsDetail,
+                            TsType = model.TsType,
+                        };
+
+                        _context.Transaction.Add(transaction_Withdraw);
+                        _context.SaveChanges();
+                        check_swal = 1;
+                    }
+                    tran.Commit();
+                }
+                catch(Exception ex)
                 {
-                    TsAcId = model.TsAcId,
-                    TsBalance = now_balance,
-                    TsDate = DateTime.Now,
-                    TsMoney = model.TsMoney,
-                    TsDetail = model.TsDetail,
-                    TsType = model.TsType,
-                };
-
-                _context.Transaction.Add(transaction_Withdraw);
-                _context.SaveChanges();
-                check_swal = 1;
+                    tran.Rollback();
+                    check_swal = 2;
+                }
             }
+
+
+
+          
 
             return Json(check_swal);
         }
