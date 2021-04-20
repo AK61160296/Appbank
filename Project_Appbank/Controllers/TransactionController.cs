@@ -5,6 +5,7 @@ using Project_Appbank.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Project_Appbank.Constant;
 
 namespace Project_Appbank.Controllers
 {
@@ -13,6 +14,7 @@ namespace Project_Appbank.Controllers
         private appbankContext _context;
         private DateTime begin;
         private DateTime end;
+        private string check_status;
         public TransactionController(appbankContext context)
         {
             this._context = context;
@@ -105,7 +107,6 @@ namespace Project_Appbank.Controllers
 
         public IActionResult Transfer([FromBody] TransactionParam model)
         {
-            int check_status = 0;
 
             using (var t = _context.Database.BeginTransaction())
             {
@@ -136,7 +137,7 @@ namespace Project_Appbank.Controllers
                         account_data1.AcBalance -= model.TsMoney;
                         _context.SaveChanges(); // update balance
 
-                        var transfer_data = new Transaction()
+                        var transfer = new Transaction()
                         {
                             TsAcId = model.TsAcId,
                             TsBalance = check_balace,
@@ -147,7 +148,7 @@ namespace Project_Appbank.Controllers
                             TsType = model.TsType,
                             TsNote = model.TsNote,
                         };
-                            _context.Transaction.Add(transfer_data);
+                            _context.Transaction.Add(transfer);
                             _context.SaveChanges();
 
                         #region
@@ -156,7 +157,7 @@ namespace Project_Appbank.Controllers
                                            where a.AcId == account_id
                                            select a.AcBalance).FirstOrDefault();
 
-                        var transfer_data_target = new Transaction()
+                        var Transferred = new Transaction()
                         {
                             TsAcId = account_id,
                             TsBalance = now_balance,
@@ -164,20 +165,21 @@ namespace Project_Appbank.Controllers
                             TsAcDestinationId = model.TsAcId,
                             TsMoney = model.TsMoney,
                             TsDetail = "เงินเข้าบัญชี",
-                            TsType = 2,
+                            TsType = Checktype.tranfered,
                             TsNote = model.TsNote,
                         };
-                            _context.Transaction.Add(transfer_data_target);
+                            _context.Transaction.Add(Transferred);
                             _context.SaveChanges();
                         #endregion
-                        check_status = 1;
+
+                        check_status = Checkstatus.success;
                     }
                     t.Commit();
                 }
                 catch (Exception ex)
                 {
                     t.Rollback();
-                    check_status = 2;
+                    check_status = Checkstatus.error;
                 }
             }
 
@@ -185,9 +187,7 @@ namespace Project_Appbank.Controllers
         }
         public IActionResult Deposit_Withdraw([FromBody] TransactionParam model)
         {
-
-            int check_status = 0;
-
+        
             using (var tran = _context.Database.BeginTransaction())
             {
                 try
@@ -196,7 +196,7 @@ namespace Project_Appbank.Controllers
                                          where a.AcId == model.TsAcId
                                          select a.AcBalance).FirstOrDefault();
 
-                    if (model.TsType == 2 && check_balance >= model.TsMoney)
+                    if (model.TsType == Checktype.withdraw && check_balance >= model.TsMoney)
                     {
                         var balance_withdraw = (from c in _context.Account
                                               where c.AcId == model.TsAcId
@@ -220,7 +220,8 @@ namespace Project_Appbank.Controllers
                         };
                             _context.Transaction.Add(transaction_withdraw);
                             _context.SaveChanges();
-                            check_status = 1;
+
+                            check_status = Checkstatus.success;
                     }
                     else
                     {
@@ -246,14 +247,15 @@ namespace Project_Appbank.Controllers
 
                             _context.Transaction.Add(transaction_depositor);
                             _context.SaveChanges();
-                            check_status = 1;
+                          
+                            check_status = Checkstatus.success;
                     }
                     tran.Commit();
                 }
                 catch(Exception ex)
                 {
                     tran.Rollback();
-                    check_status = 2;
+                    check_status = Checkstatus.error;
                 }
             }
 

@@ -8,13 +8,14 @@ using Project_Appbank.ViewModels;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Project_Appbank.Constant;
 
 namespace Project_Appbank.Controllers
 {
     public class HomeController : Controller
     {
         private appbankContext _context;
-
+        private string check_status;
         public HomeController(appbankContext context)
         {
             this._context = context;
@@ -24,24 +25,24 @@ namespace Project_Appbank.Controllers
         public IActionResult Userlist()
         {
 
-            IQueryable<UserViewModel> us_data = from a in _context.User
-                                                    //where a.isEnable == true
-                                                select new UserViewModel
-                                                {
-                                                    UserId = a.UserId,
-                                                    UserName = a.UserName,
-                                                    UserEmail = a.UserEmail,
-                                                    UserIsActive = a.UserIsActive
-                                                };
+            IQueryable<UserViewModel> user = from a in _context.User
+                                                 //where a.isEnable == true
+                                             select new UserViewModel
+                                             {
+                                                 UserId = a.UserId,
+                                                 UserName = a.UserName,
+                                                 UserEmail = a.UserEmail,
+                                                 UserIsActive = a.UserIsActive
+                                             };
 
-            return View(us_data.ToList());
+            return View(user.ToList());
         }
         [HttpPost]
         public IActionResult login([FromBody] User model)
         {
             HttpContext.Session.SetString("usersession", model.UserId.ToString());
-            int check = 1;
-            return Json(check);
+
+            return Json(Checkstatus.success);
         }
 
         public IActionResult Index()
@@ -53,42 +54,40 @@ namespace Project_Appbank.Controllers
         public IActionResult Search([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            IQueryable<AccountViewModels> json_data = from a in _context.Account
-                                                      where a.UserId == Int32.Parse(user_session) && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
-                                                      select new AccountViewModels
-                                                      {
-                                                          AcId = a.AcId,
-                                                          AcNumber = a.AcNumber,
-                                                          AcName = a.AcName,
-                                                          AcBalance = a.AcBalance,
-                                                          AcIsActive = a.AcIsActive
-                                                      };
-
-            return Json(json_data.ToList());
+            IQueryable<AccountViewModels> accounts = from a in _context.Account
+                                                     where a.UserId == Int32.Parse(user_session) && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
+                                                     select new AccountViewModels
+                                                     {
+                                                         AcId = a.AcId,
+                                                         AcNumber = a.AcNumber,
+                                                         AcName = a.AcName,
+                                                         AcBalance = a.AcBalance,
+                                                         AcIsActive = a.AcIsActive
+                                                     };
+            return Json(accounts.ToList());
         }
 
         [HttpPost]
         public IActionResult Edit([FromBody] AccountParam model)
         {
 
-            IQueryable<AccountViewModels> json_data = from a in _context.Account
-                                                      where a.AcId == model.AcId
-                                                      select new AccountViewModels
-                                                      {
-                                                          AcId = a.AcId,
-                                                          AcNumber = a.AcNumber,
-                                                          AcName = a.AcName,
-                                                          AcBalance = a.AcBalance,
-                                                          AcIsActive = a.AcIsActive
-                                                      };
-            return Json(json_data.Single());
+            IQueryable<AccountViewModels> account = from a in _context.Account
+                                                    where a.AcId == model.AcId
+                                                    select new AccountViewModels
+                                                    {
+                                                        AcId = a.AcId,
+                                                        AcNumber = a.AcNumber,
+                                                        AcName = a.AcName,
+                                                        AcBalance = a.AcBalance,
+                                                        AcIsActive = a.AcIsActive
+                                                    };
+            return Json(account.Single());
         }
 
         [HttpPost]
         public IActionResult Add([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            int check = 1;
             IQueryable<Account> json_data = from a in _context.Account
                                             where a.AcNumber == model.AcNumber
                                             select new Account
@@ -98,7 +97,7 @@ namespace Project_Appbank.Controllers
 
             if (json_data.Count() == 0)
             {
-                var ac = new Account()
+                var account = new Account()
                 {
                     AcNumber = model.AcNumber,
                     AcBalance = 0,
@@ -106,16 +105,13 @@ namespace Project_Appbank.Controllers
                     AcIsActive = model.AcIsActive,
                     UserId = Int32.Parse(user_session),
                 };
-                    _context.Account.Add(ac);
-                    _context.SaveChanges();
-            }
-            else
-            {
-                check = 0;
-
+                _context.Account.Add(account);
+                _context.SaveChanges();
+                check_status = Checkstatus.success;
             }
 
-            return Json(check);
+
+            return Json(check_status);
         }
 
         public IActionResult Update([FromBody] Account model)
@@ -128,15 +124,13 @@ namespace Project_Appbank.Controllers
             var account = (from c in _context.Account
                            where c.AcId == model.AcId
                            select c).Single();
-       
-               account.AcName = model.AcName;
-               account.AcIsActive = model.AcIsActive;
-               account.AcNumber = model.AcNumber;
+
+            account.AcName = model.AcName;
+            account.AcIsActive = model.AcIsActive;
+            account.AcNumber = model.AcNumber;
             _context.SaveChanges();
 
-
-            int check = 1;
-            return Json(check);
+            return Json(Checkstatus.success);
         }
 
         public IActionResult Privacy()

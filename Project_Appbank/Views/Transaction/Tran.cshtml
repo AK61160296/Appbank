@@ -357,7 +357,7 @@
             })
                 .then(function (response) {
                     console.log(response)
-                    if (response.data == 1) {
+                    if (response.data == "success") {
                         swal({
                             title: "บันทึกข้อมูลสำเร็จ",
                             text: "You clicked the button!",
@@ -365,7 +365,8 @@
                         }).then((value) => {
                             search()
                         });
-                   } else if (response.data == 2) {
+
+                    } else if (response.data == "error") {
                         swal({
                             title: "บันทึกข้อมูลไม่สำเร็จ",
                             text: "เนื่องข้อมูลเกิดข้อผิดพลาด",
@@ -439,7 +440,7 @@
             })
                 .then(function (response) {
                     console.log(response)
-                    if (response.data == 1) {
+                    if (response.data == "success") {
                         swal({
                             title: "บันทึกข้อมูลสำเร็จ",
                             text: "You clicked the button!",
@@ -448,7 +449,7 @@
                             search()
                         });
 
-                    } else if (response.data == 2) {
+                    } else if (response.data == "error") {
                         swal({
                             title: "บันทึกข้อมูลไม่สำเร็จ",
                             text: "เนื่องข้อมูลเกิดข้อผิดพลาด",
