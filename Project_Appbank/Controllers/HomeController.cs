@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Project_Appbank.Models;
 using Project_Appbank.Models.DBModels;
 using Project_Appbank.ViewModels;
@@ -44,16 +46,7 @@ namespace Project_Appbank.Controllers
 
         public IActionResult Index()
         {
-            //IQueryable<AccountViewModels> ac_data = from a in _context.Account
-            //                                        where a.AcNumber == "1111111111"
-            //                                        select new AccountViewModels
-            //                                        {
-            //                                            AcId = a.AcId,
-            //                                            AcNumber = a.AcNumber,
-            //                                            AcName = a.AcName,
-            //                                            AcBalance = a.AcBalance,
-            //                                            AcIsActive = a.AcIsActive
-            //                                        };
+
             return View();
         }
         [HttpPost]
@@ -61,9 +54,7 @@ namespace Project_Appbank.Controllers
         {
             var user_session = HttpContext.Session.GetString("usersession");
             IQueryable<AccountViewModels> json_data = from a in _context.Account
-                                                     // where a.AcName.Contains(model.AcName) && a.UserId == Int32.Parse(user_session) || a.AcNumber.Contains(model.AcNumber) && a.UserId == Int32.Parse(user_session)
-                                                     
-                                                      where  a.UserId == Int32.Parse(user_session) && ( a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName) )
+                                                      where a.UserId == Int32.Parse(user_session) && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
                                                       select new AccountViewModels
                                                       {
                                                           AcId = a.AcId,
@@ -115,8 +106,8 @@ namespace Project_Appbank.Controllers
                     AcIsActive = model.AcIsActive,
                     UserId = Int32.Parse(user_session),
                 };
-                _context.Account.Add(ac);
-                _context.SaveChanges();
+                    _context.Account.Add(ac);
+                    _context.SaveChanges();
             }
             else
             {
@@ -134,29 +125,16 @@ namespace Project_Appbank.Controllers
             //entry.State = EntityState.Modified;
             //_context.SaveChanges();
 
-
-
-            // Update Statement
-            var update = (from c in _context.Account
-                          where c.AcId == model.AcId
-                          select c).Single();
-
-            update.AcName = model.AcName;
-            update.AcIsActive = model.AcIsActive;
-            update.AcNumber = model.AcNumber;
+            var account = (from c in _context.Account
+                           where c.AcId == model.AcId
+                           select c).Single();
+       
+               account.AcName = model.AcName;
+               account.AcIsActive = model.AcIsActive;
+               account.AcNumber = model.AcNumber;
             _context.SaveChanges();
 
 
-            //IQueryable<AccountViewModels> ac_data = from a in _context.Account
-            //                                            //where a.isEnable == true
-            //                                        select new AccountViewModels
-            //                                        {
-            //                                            AcId = a.AcId,
-            //                                            AcNumber = a.AcNumber,
-            //                                            AcName = a.AcName,
-            //                                            AcBalance = a.AcBalance,
-            //                                            AcIsActive = a.AcIsActive
-            //                                        };
             int check = 1;
             return Json(check);
         }

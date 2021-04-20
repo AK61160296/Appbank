@@ -41,4 +41,9 @@ namespace Project_Appbank.ViewModels
         public string keyword { get; set; }
 
     }
+    public class TransactionParamId
+    {
+        public int TsAcId { get; set; }
+  
+    }
 }
