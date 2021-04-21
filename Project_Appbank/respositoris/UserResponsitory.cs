@@ -4,7 +4,7 @@ using Project_Appbank.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Project_Appbank.respositoris
+namespace Project_Appbank.Respositoris
 {
     public class UserResponsitory : Controller
     {
@@ -15,9 +15,9 @@ namespace Project_Appbank.respositoris
             this.context = context;
         }
 
-        public List<UserViewModel> Getuser()
+        public List<UserViewModel> Getusers()
         {
-            IQueryable<UserViewModel> us_data = from a in context.User
+            IQueryable<UserViewModel> queryResult = from a in context.User
                                                     //where a.isEnable == true
                                                 select new UserViewModel
                                                 {
@@ -26,7 +26,7 @@ namespace Project_Appbank.respositoris
                                                     UserEmail = a.UserEmail,
                                                     UserIsActive = a.UserIsActive
                                                 };
-            return us_data.ToList();
+            return queryResult.ToList();
         }
     }
 }
