@@ -9,127 +9,73 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using Project_Appbank.Constant;
+using Project_Appbank.Respositoris;
 
 namespace Project_Appbank.Controllers
 {
     public class HomeController : Controller
     {
         private appbankContext _context;
+        private readonly AccountRespository accountRespository;
+        private readonly UserResponsitory UserResponsitory;
         private string check_status;
-        public HomeController(appbankContext context)
+        public HomeController(appbankContext context,AccountRespository accountRespository,UserResponsitory userResponsitory)
         {
             this._context = context;
+            this.accountRespository = accountRespository;
+            this.UserResponsitory = userResponsitory;
         }
-
-
         public IActionResult Userlist()
         {
-
-            IQueryable<UserViewModel> user = from a in _context.User
-                                                 //where a.isEnable == true
-                                             select new UserViewModel
-                                             {
-                                                 UserId = a.UserId,
-                                                 UserName = a.UserName,
-                                                 UserEmail = a.UserEmail,
-                                                 UserIsActive = a.UserIsActive
-                                             };
-
-            return View(user.ToList());
+           var user_data =  UserResponsitory.Getusers();
+        
+            return View(user_data);
         }
         [HttpPost]
         public IActionResult login([FromBody] User model)
         {
             HttpContext.Session.SetString("usersession", model.UserId.ToString());
-
             return Json(Checkstatus.success);
         }
 
         public IActionResult Index()
         {
-
             return View();
         }
+
         [HttpPost]
         public IActionResult Search([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            IQueryable<AccountViewModels> accounts = from a in _context.Account
-                                                     where a.UserId == Int32.Parse(user_session) && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
-                                                     select new AccountViewModels
-                                                     {
-                                                         AcId = a.AcId,
-                                                         AcNumber = a.AcNumber,
-                                                         AcName = a.AcName,
-                                                         AcBalance = a.AcBalance,
-                                                         AcIsActive = a.AcIsActive
-                                                     };
-            return Json(accounts.ToList());
+            var account_data = accountRespository.GetAccounts(Int32.Parse(user_session), model);
+            return Json(account_data);
         }
 
         [HttpPost]
-        public IActionResult Edit([FromBody] AccountParam model)
+        public IActionResult Edit([FromBody] AccountParamId model)
         {
-
-            IQueryable<AccountViewModels> account = from a in _context.Account
-                                                    where a.AcId == model.AcId
-                                                    select new AccountViewModels
-                                                    {
-                                                        AcId = a.AcId,
-                                                        AcNumber = a.AcNumber,
-                                                        AcName = a.AcName,
-                                                        AcBalance = a.AcBalance,
-                                                        AcIsActive = a.AcIsActive
-                                                    };
-            return Json(account.Single());
+            var account = accountRespository.GetAccount(model.AcId);
+            return Json(account);
         }
 
         [HttpPost]
         public IActionResult Add([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            IQueryable<Account> json_data = from a in _context.Account
-                                            where a.AcNumber == model.AcNumber
-                                            select new Account
-                                            {
-                                                AcId = a.AcId,
-                                            };
+            var check_account = accountRespository.GetAccountId(model.AcNumber);
 
-            if (json_data.Count() == 0)
+            if (check_account == 0)
             {
-                var account = new Account()
-                {
-                    AcNumber = model.AcNumber,
-                    AcBalance = 0,
-                    AcName = model.AcName,
-                    AcIsActive = model.AcIsActive,
-                    UserId = Int32.Parse(user_session),
-                };
-                _context.Account.Add(account);
-                _context.SaveChanges();
+                accountRespository.Add(Int32.Parse(user_session), model);
                 check_status = Checkstatus.success;
             }
-
 
             return Json(check_status);
         }
 
-        public IActionResult Update([FromBody] Account model)
+        public IActionResult Update([FromBody] AccountParam model)
         {
-            //_context.Account.Attach(model);
-            //EntityEntry<Account> entry = _context.Entry(model);
-            //entry.State = EntityState.Modified;
-            //_context.SaveChanges();
-
-            var account = (from c in _context.Account
-                           where c.AcId == model.AcId
-                           select c).Single();
-
-            account.AcName = model.AcName;
-            account.AcIsActive = model.AcIsActive;
-            account.AcNumber = model.AcNumber;
-            _context.SaveChanges();
-
+            accountRespository.Update(model);
             return Json(Checkstatus.success);
         }
 

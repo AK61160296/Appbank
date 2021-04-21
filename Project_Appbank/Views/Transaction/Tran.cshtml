@@ -248,7 +248,7 @@
                         } else if (entry.tsType == 2 && entry.tsAcDestinationId == 0) {
                             x += '<td style="color:red">' + entry.tsMoney + '</td>'
                             x += '<td>-</td>'
-                        } else if (entry.tsType == 2 && entry.tsAcDestinationId != 0) {
+                        } else if (entry.tsType == 1 && entry.tsAcDestinationId != 0) {
                             x += '<td>-</td>'
                             x += '<td style="color:lawngreen">' + entry.tsMoney + '</td>'
                         } else {

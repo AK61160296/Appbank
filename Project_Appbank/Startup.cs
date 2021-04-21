@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Project_Appbank.Models.DBModels;
+using Project_Appbank.Respositoris;
 using System;
 
 namespace Project_Appbank
@@ -22,6 +23,9 @@ namespace Project_Appbank
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<appbankContext>(options => options.UseMySql(Configuration.GetConnectionString("appbankContext")));
+            services.AddTransient<AccountRespository>();
+            services.AddTransient<UserResponsitory>();
+            services.AddTransient<TransactionRespository>();
             services.AddControllersWithViews();
 
             services.AddSession(options =>

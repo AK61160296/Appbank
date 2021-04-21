@@ -6,18 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Project_Appbank.Constant;
+using Project_Appbank.Respositoris;
 
 namespace Project_Appbank.Controllers
 {
     public class TransactionController : Controller
     {
         private appbankContext _context;
-        private DateTime begin;
-        private DateTime end;
+        private readonly AccountRespository accountRespository;
+        private readonly TransactionRespository transactionRespository;
         private string check_status;
-        public TransactionController(appbankContext context)
+        public TransactionController(appbankContext context, AccountRespository accountRespository ,TransactionRespository transactionRespository)
         {
             this._context = context;
+            this.accountRespository = accountRespository;
+            this.transactionRespository = transactionRespository;
         }
 
         public IActionResult Tran()
@@ -29,118 +32,44 @@ namespace Project_Appbank.Controllers
         public IActionResult Search([FromBody] TransactionParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            var user_id = Int16.Parse(user_session);
-            if (model.date_begin != "")
-            {
-                begin = DateTime.Parse(model.date_begin.ToString());
-
-            }
-            if (model.date_end != "")
-            {
-                end = DateTime.Parse(model.date_end.ToString());
-            }
-
-            IQueryable<TransactionViewModels> json_data = from a in _context.Transaction
-                                                          join b in _context.Account on a.TsAcId equals b.AcId
-                                                          where
-
-                                                          b.UserId == user_id && ((model.keyword == "" && model.date_begin == "" && model.date_end == "") ||
-                                                          (model.keyword != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword))) ||
-                                                          (model.keyword != "" && model.date_begin != "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin)) ||
-                                                          (model.keyword != "" && model.date_begin == "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) && a.TsDate >= begin || a.TsDetail.Contains(model.keyword) && a.TsDate <= end)) ||
-                                                          (model.keyword != "" && model.date_begin != "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin && a.TsDate <= end)) ||
-                                                          (model.keyword == "" && model.date_begin != "" && model.date_end == "" && (a.TsDate >= begin)) ||
-                                                          (model.keyword == "" && model.date_begin == "" && model.date_end != "" && (a.TsDate <= end)) ||
-                                                          (model.keyword == "" && model.date_begin != "" && model.date_end != "" && model.date_end != "" && (a.TsDate >= begin && a.TsDate <= end))
-                                                          )
-
-                                                         //b.AcNumber.Contains(model.keyword) && b.UserId == user_id && model.keyword == "" && model.date_begin == "" && model.date_end == "" ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
-                                                          //model.date_begin != "" && model.date_end == "" && model.keyword == "" && a.TsDate >= begin && b.UserId == user_id ||
-                                                          //model.date_begin == "" && model.date_end != "" && model.keyword == "" && a.TsDate <= end && b.UserId == user_id ||
-                                                          //model.date_begin != "" && model.date_end != "" && model.keyword == "" && a.TsDate >= begin && a.TsDate <= end && b.UserId == user_id
-
-                                                          orderby a.TsId
-                                                          select new TransactionViewModels
-                                                          {
-                                                              TsId = a.TsId,
-                                                              name = b.AcNumber,
-                                                              TsAcId = a.TsAcId,
-                                                              Date1 = a.Date,
-                                                              TsAcDestinationId = a.TsAcDestinationId,
-                                                              TsBalance = a.TsBalance,
-                                                              TsMoney = a.TsMoney,
-                                                              TsDetail = a.TsDetail,
-                                                              TsType = a.TsType,
-                                                          };
-            return Json(json_data.ToList());
+            var transaction_data = transactionRespository.GetTransaction(Int32.Parse(user_session),model);    
+            return Json(transaction_data);
         }
 
         public IActionResult Balance([FromBody] TransactionParamId model)
         {
-             
-            var balance = from a in _context.Account
-                          where a.AcId == model.TsAcId
-                          select a.AcBalance;
-            return Json(balance.FirstOrDefault());
+            var balance = accountRespository.Getbalance(model.TsAcId);
+            return Json(balance);
         }
 
         public IActionResult Option_account()
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            IQueryable<AccountViewModels> json_data = from a in _context.Account
-                                                      where a.UserId == Int16.Parse(user_session)
-                                                      select new AccountViewModels
-                                                      {
-                                                        AcId = a.AcId,
-                                                        AcNumber = a.AcNumber,
-                                                      };
+            var json_data = accountRespository.GetOptionAccount(Int32.Parse(user_session));
             return Json(json_data.ToList());
         }
 
         public IActionResult Transfer([FromBody] TransactionParam model)
         {
-
             using (var t = _context.Database.BeginTransaction())
             {
                 try
                 {
-                        var check_balace = (from a in _context.Account
-                                             where a.AcId == model.TsAcId
-                                             select a.AcBalance).FirstOrDefault();
+                        var check_balace = accountRespository.Getbalance(model.TsAcId);
 
                     if (check_balace >= model.TsMoney)
                     {
-
-                        var account_id = (from a in _context.Account
-                                             where a.AcNumber == model.TsAD
-                                             select a.AcId).FirstOrDefault();
-
-                        //get account data by account_id
-                        var account_data = (from c in _context.Account
-                                             where c.AcId == account_id
-                                             select c).Single();
-                        account_data.AcBalance += model.TsMoney;
-                        _context.SaveChanges();// update balance
-
-                        //get account data by ts_acid
-                        var account_data1 = (from c in _context.Account
-                                             where c.AcId == model.TsAcId
-                                             select c).Single();
-                        account_data1.AcBalance -= model.TsMoney;
-                        _context.SaveChanges(); // update balance
+                        var account_id = accountRespository.GetAccountId(model.TsAD);
+                        //Update balance account transfer
+                        accountRespository.UpdateBalance(model.TsAcId, -model.TsMoney);
+                        //Update balance account target
+                        accountRespository.UpdateBalance(account_id,model.TsMoney);                  
+                        var balance_transfer = accountRespository.Getbalance(model.TsAcId);
 
                         var transfer = new Transaction()
                         {
                             TsAcId = model.TsAcId,
-                            TsBalance = check_balace,
+                            TsBalance = balance_transfer,
                             TsDate = DateTime.Now,
                             TsAcDestinationId = account_id,
                             TsMoney = model.TsMoney,
@@ -152,34 +81,30 @@ namespace Project_Appbank.Controllers
                             _context.SaveChanges();
 
                         #region
-
-                        var now_balance = (from a in _context.Account
-                                           where a.AcId == account_id
-                                           select a.AcBalance).FirstOrDefault();
+                        var balance_traget = accountRespository.Getbalance(account_id);
 
                         var Transferred = new Transaction()
                         {
                             TsAcId = account_id,
-                            TsBalance = now_balance,
+                            TsBalance = balance_traget,
                             TsDate = DateTime.Now,
                             TsAcDestinationId = model.TsAcId,
                             TsMoney = model.TsMoney,
                             TsDetail = "เงินเข้าบัญชี",
-                            TsType = Checktype.tranfered,
+                            TsType = Checktype.depositor,
                             TsNote = model.TsNote,
                         };
                             _context.Transaction.Add(Transferred);
                             _context.SaveChanges();
                         #endregion
-
-                        check_status = Checkstatus.success;
+                            check_status = Checkstatus.success;
                     }
-                    t.Commit();
+                            t.Commit();
                 }
                 catch (Exception ex)
                 {
-                    t.Rollback();
-                    check_status = Checkstatus.error;
+                            t.Rollback();
+                            check_status = Checkstatus.error;
                 }
             }
 
@@ -192,70 +117,32 @@ namespace Project_Appbank.Controllers
             {
                 try
                 {
-                        var check_balance = (from a in _context.Account
-                                         where a.AcId == model.TsAcId
-                                         select a.AcBalance).FirstOrDefault();
+                          var check_balance = accountRespository.Getbalance(model.TsAcId);
 
                     if (model.TsType == Checktype.withdraw && check_balance >= model.TsMoney)
                     {
-                        var balance_withdraw = (from c in _context.Account
-                                              where c.AcId == model.TsAcId
-                                              select c).Single();
-
-                            balance_withdraw.AcBalance -= model.TsMoney;
-                            _context.SaveChanges();
-
-                        var now_balance = (from a in _context.Account
-                                           where a.AcId == model.TsAcId
-                                           select a.AcBalance).FirstOrDefault();
-
-                        var transaction_withdraw = new Transaction()
-                        {
-                            TsAcId = model.TsAcId,
-                            TsBalance = now_balance,
-                            TsDate = DateTime.Now,
-                            TsMoney = model.TsMoney,
-                            TsDetail = model.TsDetail,
-                            TsType = model.TsType,
-                        };
-                            _context.Transaction.Add(transaction_withdraw);
-                            _context.SaveChanges();
-
-                            check_status = Checkstatus.success;
+                          //Update Balance withdraw
+                          accountRespository.UpdateBalance(model.TsAcId, -model.TsMoney);
+                          //Get Now balance withdraw
+                          var now_balance = accountRespository.Getbalance(model.TsAcId);
+                          transactionRespository.Add_Deposit_Withdraw(now_balance, model);                      
+                          check_status = Checkstatus.success;
                     }
                     else
                     {
-                        var balance_depositor = (from c in _context.Account
-                                                 where c.AcId == model.TsAcId
-                                                 select c).Single();
-                            balance_depositor.AcBalance += model.TsMoney;
-                            _context.SaveChanges();
-
-                        var now_balance = (from a in _context.Account
-                                            where a.AcId == model.TsAcId
-                                            select a.AcBalance).FirstOrDefault();
-
-                        var transaction_depositor = new Transaction()
-                        {
-                            TsAcId = model.TsAcId,
-                            TsBalance = now_balance,
-                            TsDate = DateTime.Now,
-                            TsMoney = model.TsMoney,
-                            TsDetail = model.TsDetail,
-                            TsType = model.TsType,
-                        };
-
-                            _context.Transaction.Add(transaction_depositor);
-                            _context.SaveChanges();
-                          
-                            check_status = Checkstatus.success;
+                           //Update Balance depositor
+                          accountRespository.UpdateBalance(model.TsAcId, model.TsMoney);
+                          //Get Now balance depositor
+                          var now_balance = accountRespository.Getbalance(model.TsAcId);
+                          transactionRespository.Add_Deposit_Withdraw(now_balance, model);
+                          check_status = Checkstatus.success;
                     }
-                    tran.Commit();
+                          tran.Commit();
                 }
                 catch(Exception ex)
                 {
-                    tran.Rollback();
-                    check_status = Checkstatus.error;
+                          tran.Rollback();
+                          check_status = Checkstatus.error;
                 }
             }
 
