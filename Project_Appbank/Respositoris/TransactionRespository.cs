@@ -1,4 +1,5 @@
-﻿using Project_Appbank.Models.DBModels;
+﻿using Project_Appbank.Constant;
+using Project_Appbank.Models.DBModels;
 using Project_Appbank.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Project_Appbank.Respositoris
         {
             this._context = context;
         }
-        public List<TransactionViewModels> GetTransaction(int user_id,TransactionParam model)
+        public List<TransactionViewModels> GetTransaction(int user_id, TransactionParam model)
         {
             if (model.date_begin != "")
             {
@@ -29,50 +30,65 @@ namespace Project_Appbank.Respositoris
             }
 
             IQueryable<TransactionViewModels> queryResult = from a in _context.Transaction
-                                                          join b in _context.Account on a.TsAcId equals b.AcId
-                                                          where
+                                                            join b in _context.Account on a.TsAcId equals b.AcId
+                                                            where
 
-                                                          b.UserId == user_id && ((model.keyword == "" && model.date_begin == "" && model.date_end == "") ||
-                                                          (model.keyword != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword))) ||
-                                                          (model.keyword != "" && model.date_begin != "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin)) ||
-                                                          (model.keyword != "" && model.date_begin == "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) && a.TsDate >= begin || a.TsDetail.Contains(model.keyword) && a.TsDate <= end)) ||
-                                                          (model.keyword != "" && model.date_begin != "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin && a.TsDate <= end)) ||
-                                                          (model.keyword == "" && model.date_begin != "" && model.date_end == "" && (a.TsDate >= begin)) ||
-                                                          (model.keyword == "" && model.date_begin == "" && model.date_end != "" && (a.TsDate <= end)) ||
-                                                          (model.keyword == "" && model.date_begin != "" && model.date_end != "" && model.date_end != "" && (a.TsDate >= begin && a.TsDate <= end))
-                                                          )
+                                                             b.UserId == user_id && (model.keyword == "" && model.date_begin == "" && model.date_end == "" ||
+                                                             model.keyword != "" && model.date_begin == "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
+                                                             model.date_begin != "" && a.TsDate >= begin && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
+                                                             model.date_end != "" && a.TsDate <= end && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
+                                                             a.TsDate >= begin && a.TsDate <= end &&(b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) ))
 
-                                                          //b.AcNumber.Contains(model.keyword) && b.UserId == user_id && model.keyword == "" && model.date_begin == "" && model.date_end == "" ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin == "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
-                                                          //model.keyword != "" && model.date_begin != "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
-                                                          //model.date_begin != "" && model.date_end == "" && model.keyword == "" && a.TsDate >= begin && b.UserId == user_id ||
-                                                          //model.date_begin == "" && model.date_end != "" && model.keyword == "" && a.TsDate <= end && b.UserId == user_id ||
-                                                          //model.date_begin != "" && model.date_end != "" && model.keyword == "" && a.TsDate >= begin && a.TsDate <= end && b.UserId == user_id
+                                                            //(model.keyword != "" && model.date_begin != "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin)) ||
+                                                            //(model.keyword != "" && model.date_begin == "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) && a.TsDate >= begin || a.TsDetail.Contains(model.keyword) && a.TsDate <= end)) ||
+                                                            //(model.keyword != "" && model.date_begin != "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin && a.TsDate <= end)) ||
+                                                            //(model.keyword == "" && model.date_begin != "" && model.date_end == "" && (a.TsDate >= begin)) ||
+                                                            //(model.keyword == "" && model.date_begin == "" && model.date_end != "" && (a.TsDate <= end)) ||
+                                                            //(model.keyword == "" && model.date_begin != "" && model.date_end != "" && model.date_end != "" && (a.TsDate >= begin && a.TsDate <= end))
+                                                            //)
 
-                                                          orderby a.TsId
-                                                          select new TransactionViewModels
-                                                          {
-                                                              TsId = a.TsId,
-                                                              name = b.AcNumber,
-                                                              TsAcId = a.TsAcId,
-                                                              Date1 = a.Date,
-                                                              TsAcDestinationId = a.TsAcDestinationId,
-                                                              TsBalance = a.TsBalance,
-                                                              TsMoney = a.TsMoney,
-                                                              TsDetail = a.TsDetail,
-                                                              TsType = a.TsType,
-                                                          };
+
+                                                            //b.UserId == user_id && ((model.keyword == "" && model.date_begin == "" && model.date_end == "") ||
+                                                            //(model.keyword != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword))) ||
+                                                            //(model.keyword != "" && model.date_begin != "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin)) ||
+                                                            //(model.keyword != "" && model.date_begin == "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) && a.TsDate >= begin || a.TsDetail.Contains(model.keyword) && a.TsDate <= end)) ||
+                                                            //(model.keyword != "" && model.date_begin != "" && model.date_end != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword) && a.TsDate >= begin && a.TsDate <= end)) ||
+                                                            //(model.keyword == "" && model.date_begin != "" && model.date_end == "" && (a.TsDate >= begin)) ||
+                                                            //(model.keyword == "" && model.date_begin == "" && model.date_end != "" && (a.TsDate <= end)) ||
+                                                            //(model.keyword == "" && model.date_begin != "" && model.date_end != "" && model.date_end != "" && (a.TsDate >= begin && a.TsDate <= end))
+                                                            //)
+
+                                                            //b.AcNumber.Contains(model.keyword) && b.UserId == user_id && model.keyword == "" && model.date_begin == "" && model.date_end == "" ||
+                                                            //model.keyword != "" && model.date_begin == "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id ||
+                                                            //model.keyword != "" && model.date_begin == "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id ||
+                                                            //model.keyword != "" && model.date_begin != "" && model.date_end == "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
+                                                            //model.keyword != "" && model.date_begin != "" && model.date_end == "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin ||
+                                                            //model.keyword != "" && model.date_begin == "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
+                                                            //model.keyword != "" && model.date_begin == "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate <= end ||
+                                                            //model.keyword != "" && model.date_begin != "" && model.date_end != "" && b.AcNumber.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
+                                                            //model.keyword != "" && model.date_begin != "" && model.date_end != "" && a.TsDetail.Contains(model.keyword) && b.UserId == user_id && a.TsDate >= begin && a.TsDate <= end ||
+                                                            //model.date_begin != "" && model.date_end == "" && model.keyword == "" && a.TsDate >= begin && b.UserId == user_id ||
+                                                            //model.date_begin == "" && model.date_end != "" && model.keyword == "" && a.TsDate <= end && b.UserId == user_id ||
+                                                            //model.date_begin != "" && model.date_end != "" && model.keyword == "" && a.TsDate >= begin && a.TsDate <= end && b.UserId == user_id
+
+                                                            orderby a.TsId
+                                                            select new TransactionViewModels
+                                                            {
+                                                                TsId = a.TsId,
+                                                                name = b.AcNumber,
+                                                                TsAcId = a.TsAcId,
+                                                                Date1 = a.Date,
+                                                                TsAcDestinationId = a.TsAcDestinationId,
+                                                                TsBalance = a.TsBalance,
+                                                                TsMoney = a.TsMoney,
+                                                                TsDetail = a.TsDetail,
+                                                                TsType = a.TsType,
+                                                            };
 
             return queryResult.ToList();
         }
 
-        public void Add_Deposit_Withdraw(decimal balance,TransactionParam model)
+        public void Add_Deposit_Withdraw(decimal balance, TransactionParam model)
         {
 
             var transaction_withdraw = new Transaction()
@@ -86,8 +102,43 @@ namespace Project_Appbank.Respositoris
             };
             _context.Transaction.Add(transaction_withdraw);
             _context.SaveChanges();
-          
+
         }
+        public void Add_Transfer(int account_id, TransactionParam model, decimal balance)
+        {
+            var transfer = new Transaction()
+            {
+                TsAcId = model.TsAcId,
+                TsBalance = balance,
+                TsDate = DateTime.Now,
+                TsAcDestinationId = account_id,
+                TsMoney = model.TsMoney,
+                TsDetail = model.TsDetail,
+                TsType = Checktype.transfer,
+                TsNote = model.TsNote,
+            };
+            _context.Transaction.Add(transfer);
+            _context.SaveChanges();
+
+        }
+        public void Add_Payee(int account_id, TransactionParam model, decimal balance)
+        {
+            var payee = new Transaction()
+            {
+                TsAcId = account_id,
+                TsBalance = balance,
+                TsDate = DateTime.Now,
+                TsAcDestinationId = model.TsAcId,
+                TsMoney = model.TsMoney,
+                TsDetail = "เงินเข้าบัญชี",
+                TsType = Checktype.payee,
+                TsNote = model.TsNote,
+            };
+            _context.Transaction.Add(payee);
+            _context.SaveChanges();
+
+        }
+
 
     }
 }

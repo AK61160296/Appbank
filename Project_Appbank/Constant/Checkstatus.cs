@@ -14,7 +14,8 @@ namespace Project_Appbank.Constant
     }
     public static class Checktype
     {
-        public const int tranfered = 1;
+        public const int payee = 4;
+        public const int transfer = 3;
         public const int withdraw = 2;
         public const int depositor = 1;
     }

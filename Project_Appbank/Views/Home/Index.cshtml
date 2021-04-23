@@ -129,6 +129,17 @@
         search()
     });
 
+    function push(element) {
+        console.log(element)
+        var row_index = element.parentNode.parentNode.rowIndex + 1;          
+        var get_text = $('#tbl').find('tr:nth-child(' + row_index + ')').find('td:nth-child(' + 3 + ')').text();
+      /*  var type = $('#tbl').find('tr:nth-child(' + row_index + ')').find('td:nth-child(' + 5 + ')').text();*/
+        var index = get_text.search(" ");      
+        var monney = get_text.substring(0, index);
+        
+        $('#tbl').find('tr:nth-child(' + row_index + ')').find('td:nth-child(' + 3 + ')').html(parseInt(monney) + 1 +'<span style="font-size: 11px"> THB</span>');
+    }
+
     function search() {
 
         var keyword = document.getElementById("keyword").value
@@ -160,7 +171,7 @@
                         x += '<td>' + entry.acName + '</td>'
                         x += '<td>' + entry.acBalance + ' <span style="font-size:11px">THB</span></td>'
                         x += '<td>' + entry.acIsActive + '</td>'
-                        x += '<td>' + '<button data-toggle="modal" onclick="edit_account(' + entry.acId + ')" data-target="#edit">เเก้ไข</button>' + '</td>'
+                        x += '<td>' +  '<button  onclick="minus(this)" >ลดตัง</button>' +'<button data-toggle="modal" onclick="edit_account(' + entry.acId + ')" data-target="#edit">เเก้ไข</button>' + '<button  onclick="push(this)" >เพิ่มตัง</button>'  + '</td>'
                         x += '</tr>'
                     });
 
