@@ -12,6 +12,7 @@ namespace Project_Appbank
 {
     public class Startup
     {
+        readonly string allowSpecificOrigins = "_allowSpecificOrigins";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -29,10 +30,20 @@ namespace Project_Appbank
             services.AddControllersWithViews();
 
             services.AddSession(options =>
-            {
-                
+            {    
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
+            });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(allowSpecificOrigins,
+                builder =>
+                {
+                    builder.AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                });
             });
         }
 
@@ -49,6 +60,7 @@ namespace Project_Appbank
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            app.UseCors(allowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

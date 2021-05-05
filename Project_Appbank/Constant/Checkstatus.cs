@@ -10,7 +10,7 @@ namespace Project_Appbank.Constant
         public const string success = "success";
         public const string duplicate_data = "duplicate";
         public const string error = "error";
-        public const string error_blance = "error";
+        public const string error_balance = "error_balance";
     }
     public static class Checktype
     {

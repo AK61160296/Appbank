@@ -27,15 +27,15 @@ namespace Project_Appbank.Controllers
         }
         public IActionResult Userlist()
         {
-           var user_data =  UserResponsitory.Getusers();
-        
-            return View(user_data);
+            var user_data =  UserResponsitory.Getusers();   
+            return Json(user_data);
         }
         [HttpPost]
         public IActionResult login([FromBody] User model)
         {
             HttpContext.Session.SetString("usersession", model.UserId.ToString());
-            return Json(Checkstatus.success);
+            var user_session = HttpContext.Session.GetString("usersession");
+            return Json(user_session);
         }
 
         public IActionResult Index()
@@ -47,7 +47,7 @@ namespace Project_Appbank.Controllers
         public IActionResult Search([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            var account_data = accountRespository.GetAccounts(Int32.Parse(user_session), model);
+            var account_data = accountRespository.GetAccounts(1, model);
             return Json(account_data);
         }
 
@@ -62,14 +62,7 @@ namespace Project_Appbank.Controllers
         public IActionResult Add([FromBody] AccountParam model)
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            var check_account = accountRespository.GetAccountId(model.AcNumber);
-
-            if (check_account == 0)
-            {
-                accountRespository.Add(Int32.Parse(user_session), model);
-                check_status = Checkstatus.success;
-            }
-
+                check_status = accountRespository.Add(1, model);
             return Json(check_status);
         }
 
