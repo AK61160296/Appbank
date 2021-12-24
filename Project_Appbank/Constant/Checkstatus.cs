@@ -8,6 +8,8 @@ namespace Project_Appbank.Constant
     public static class Checkstatus
     {
         public const string success = "success";
+        public const string successDeposit = "successdeposit";
+        public const string successWithdraw = "successwithdraw";
         public const string duplicate_data = "duplicate";
         public const string error = "error";
         public const string error_balance = "error_balance";

@@ -29,7 +29,7 @@ namespace Project_Appbank.Controllers
         {
          
             var user_data =  UserResponsitory.Getusers();   
-            return Json(user_data);
+            return View(user_data);
         }
         [HttpPost]
         public IActionResult login([FromBody] User model)

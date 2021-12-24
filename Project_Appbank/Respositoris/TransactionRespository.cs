@@ -31,18 +31,11 @@ namespace Project_Appbank.Respositoris
 
             IQueryable<TransactionViewModels> queryResult = from a in _context.Transaction
                                                             join b in _context.Account on a.TsAcId equals b.AcId
-                                                            where
-
-                                                            //b.UserId == user_id && 
-                                                            //((model.keyword != "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword))) ||
-                                                            //model.date_begin != "" && model.date_end != "" && a.TsDate >= begin && a.TsDate <= end )
-
-                                                            b.UserId == model.UserId &&
-                                                            model.keyword == "" && model.date_begin == "" && model.date_end == "" ||
-                                                            model.keyword != "" && model.date_begin == "" && model.date_end == "" && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
-                                                            model.date_begin != "" && a.TsDate >= begin && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
-                                                            model.date_end != "" && a.TsDate <= end && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)) ||
-                                                            a.TsDate >= begin && a.TsDate <= end && (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword))
+                                                            where 
+                                                            b.UserId == model.UserId && 
+                                                            (model.date_begin == "" || begin <= a.TsDate) &&
+                                                            (model.date_end == "" || end >= a.TsDate) &&
+                                                            (model.keyword == "" || (b.AcNumber.Contains(model.keyword) || a.TsDetail.Contains(model.keyword)))
                                                             orderby a.TsId
                                                             select new TransactionViewModels
                                                             {
@@ -72,13 +65,13 @@ namespace Project_Appbank.Respositoris
                     {
                         UpdateBalance(model.TsAcId, -model.TsMoney);
                         addDepositAndWithdraw(model);
-                        check_status = Checkstatus.success;
+                        check_status = Checkstatus.successWithdraw;
                     }
                     else if (model.TsType == Checktype.depositor)
                     {
                         UpdateBalance(model.TsAcId, model.TsMoney);
                         addDepositAndWithdraw(model);
-                        check_status = Checkstatus.success;
+                        check_status = Checkstatus.successDeposit;
                     }
                     else
                     {
