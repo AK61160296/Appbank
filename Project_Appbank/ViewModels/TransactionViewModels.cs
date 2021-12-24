@@ -27,10 +27,11 @@ namespace Project_Appbank.ViewModels
 
     public class TransactionParam
     {
-        //public int TsId { get; set; }
+       
         public int TsAcId { get; set; }
         //public int TsAcDestinationId { get; set; }
         //public decimal TsBalance { get; set; }
+        public int UserId { get; set; }
         public decimal TsMoney { get; set; }
         public string TsDetail { get; set; }
         public string TsAD { get; set; }
@@ -41,9 +42,10 @@ namespace Project_Appbank.ViewModels
         public string keyword { get; set; }
 
     }
+
     public class TransactionParamId
     {
         public int TsAcId { get; set; }
-  
+        public int UserId { get; set; }
     }
 }
