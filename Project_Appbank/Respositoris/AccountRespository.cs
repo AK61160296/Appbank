@@ -12,7 +12,7 @@ namespace Project_Appbank.Respositoris
     public class AccountRespository
     {
         private readonly appbankContext _context;
-     
+        private string check_status;
         public AccountRespository(appbankContext context)
         {
             this._context = context;
@@ -30,7 +30,7 @@ namespace Project_Appbank.Respositoris
         {
             var queryResult = (from a in _context.Account
                                where a.AcNumber == account_number
-                               select a.AcId).SingleOrDefault();
+                               select a.AcId).FirstOrDefault();
             return queryResult;
         }
 
@@ -56,10 +56,10 @@ namespace Project_Appbank.Respositoris
             return queryResult.ToList();
         }
 
-        public List<AccountViewModels> GetAccounts(AccountParam model)
+        public List<AccountViewModels> GetAccounts(int user_id, AccountParam model)
         {
             IQueryable<AccountViewModels> queryResult = from a in _context.Account
-                                                        where a.UserId == model.UserId && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
+                                                        where a.UserId == user_id && (a.AcNumber.Contains(model.AcNumber) || a.AcName.Contains(model.AcName))
                                                         select new AccountViewModels
                                                         {
                                                             AcId = a.AcId,
@@ -85,11 +85,10 @@ namespace Project_Appbank.Respositoris
             return queryResult.Single();
         }
 
-        public string Add(AccountParam model)
+        public string Add(int user_id, AccountParam model)
         {
             using (var t = _context.Database.BeginTransaction())
             {
-                string check_status;
                 try
                 {
                     if (GetAccountId(model.AcNumber) == 0)
@@ -100,7 +99,7 @@ namespace Project_Appbank.Respositoris
                             AcBalance = 0,
                             AcName = model.AcName,
                             AcIsActive = model.AcIsActive,
-                            UserId = model.UserId,
+                            UserId = user_id,
                         };
                         _context.Account.Add(account);
                         _context.SaveChanges();
@@ -117,9 +116,9 @@ namespace Project_Appbank.Respositoris
                     t.Rollback();
                     check_status = Checkstatus.error;
                 }
-                return check_status;
+
             }
-     
+            return check_status;
         }
 
         public void Update(AccountParam model)
@@ -136,19 +135,6 @@ namespace Project_Appbank.Respositoris
             account.AcName = model.AcName;
             account.AcIsActive = model.AcIsActive;
             account.AcNumber = model.AcNumber;
-            _context.SaveChanges();
-        }
-        public void updateStatus(AccountParam model)
-        {
-            //_context.Account.Attach(model);
-            //EntityEntry<Account> entry = _context.Entry(model);
-            //entry.State = EntityState.Modified;
-            //_context.SaveChanges();
-
-            var account = (from c in _context.Account
-                           where c.AcId == model.AcId
-                           select c).Single();
-            account.AcIsActive = model.AcIsActive;
             _context.SaveChanges();
         }
 
