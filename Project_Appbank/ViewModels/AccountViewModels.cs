@@ -11,7 +11,9 @@ namespace Project_Appbank.ViewModels
     public class AccountParam
     {
         public int AcId { get; set; }
-        [Required]
+        //[Required]
+        //public int? test { get; set; }
+        public int UserId { get; set; }
         public string AcNumber { get; set; }
         public decimal AcBalance { get; set; }
         public string AcName { get; set; }
