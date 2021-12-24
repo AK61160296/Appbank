@@ -18,7 +18,7 @@ namespace Project_Appbank.Controllers
         private appbankContext _context;
         private readonly AccountRespository accountRespository;
         private readonly UserResponsitory UserResponsitory;
-       
+        private string check_status;
         public HomeController(appbankContext context,AccountRespository accountRespository,UserResponsitory userResponsitory)
         {
             this._context = context;
@@ -27,7 +27,6 @@ namespace Project_Appbank.Controllers
         }
         public IActionResult Userlist()
         {
-         
             var user_data =  UserResponsitory.Getusers();   
             return View(user_data);
         }
@@ -47,14 +46,8 @@ namespace Project_Appbank.Controllers
         [HttpPost]
         public IActionResult Search([FromBody] AccountParam model)
         {
-            //if (!ModelState.IsValid)
-            //{
-
-            //    return BadRequest(ModelState);
-            //}
-            //var user_session = HttpContext.Session.GetString("usersession");
-            //var account_data = accountRespository.GetAccounts(1, model);
-            var account_data = accountRespository.GetAccounts(model);
+            var user_session = HttpContext.Session.GetString("usersession");
+            var account_data = accountRespository.GetAccounts(1, model);
             return Json(account_data);
         }
 
@@ -68,21 +61,14 @@ namespace Project_Appbank.Controllers
         [HttpPost]
         public IActionResult Add([FromBody] AccountParam model)
         {
-            string check_status;
             var user_session = HttpContext.Session.GetString("usersession");
-            check_status = accountRespository.Add(model);
+                check_status = accountRespository.Add(1, model);
             return Json(check_status);
         }
 
         public IActionResult Update([FromBody] AccountParam model)
         {
             accountRespository.Update(model);
-            return Json(Checkstatus.success);
-        }
-
-        public IActionResult updateStatus([FromBody] AccountParam model)
-        {
-            accountRespository.updateStatus(model);
             return Json(Checkstatus.success);
         }
 

@@ -31,8 +31,8 @@ namespace Project_Appbank.Controllers
         [HttpPost]
         public IActionResult Search([FromBody] TransactionParam model)
         {
-            //var user_session = HttpContext.Session.GetString("usersession");
-            var transaction_data = transactionRespository.GetTransaction(model);
+            var user_session = HttpContext.Session.GetString("usersession");
+            var transaction_data = transactionRespository.GetTransaction(1, model);
             return Json(transaction_data);
         }
 
@@ -42,10 +42,10 @@ namespace Project_Appbank.Controllers
             return Json(balance);
         }
 
-        public IActionResult Option_account([FromBody] TransactionParamId model)
+        public IActionResult Option_account()
         {
             var user_session = HttpContext.Session.GetString("usersession");
-            var account = accountRespository.GetOptionAccount(model.UserId);
+            var account = accountRespository.GetOptionAccount(1);
             return Json(account.ToList());
         }
 
